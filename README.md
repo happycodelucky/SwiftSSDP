@@ -1,11 +1,12 @@
-# SwiftSSDP [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/pryomoax/SwiftAbstractLogger/blob/master/LICENSE) [![GitHub release](https://img.shields.io/badge/version-v0.3.0-brightgreen.svg)](https://github.com/pryomoax/SwiftAbstractLogger/releases) ![Github stable](https://img.shields.io/badge/stable-true-brightgreen.svg)
+# SwiftSSDP ![](https://img.shields.io/badge/swift-3.0-orange.svg) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/pryomoax/SwiftAbstractLogger/blob/master/LICENSE) [![GitHub release](https://img.shields.io/badge/version-v0.3.0-brightgreen.svg)](https://github.com/pryomoax/SwiftAbstractLogger/releases) ![Github stable](https://img.shields.io/badge/stable-true-brightgreen.svg) 
+
 Simple Service Discovery Protocol ([SSDP](https://en.wikipedia.org/wiki/Simple_Service_Discovery_Protocol)) session based discovery package for Swift.
 
 # Package Management
 
 ## Installation
-[![GitHub spm](https://img.shields.io/badge/spm-supported-green.svg)](https://swift.org/package-manager/)
-[![GitHub carthage](https://img.shields.io/badge/carthage-supported-green.svg)](https://github.com/Carthage/Carthage)
+[![GitHub spm](https://img.shields.io/badge/spm-supported-brightgreen.svg)](https://swift.org/package-manager/)
+[![GitHub carthage](https://img.shields.io/badge/carthage-supported-brightgreen.svg)](https://github.com/Carthage/Carthage)
 [![GitHub cocoapod](https://img.shields.io/badge/cocoapods-soon-red.svg)](http://cocoapods.org/)
 
 ### Using Swift Package Manager
@@ -33,7 +34,9 @@ SwiftSSDP is currently not supported by CocoaPods (coming soon)
 
 Below is a simple class to start and stop Sonos device discovery. It uses a `10` second timeout, which will automatically close the discovery session `session` if not closed explictly.
 
-[SSDP](https://en.wikipedia.org/wiki/Simple_Service_Discovery_Protocol) utilized [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol) which is unreliable and even less reliable over WiFi. SwiftSSDP automatically repeats [MSEARCH](http://www.upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.0-20080424.pdf) broadcasts to ensure discovery of all devices. SwiftSSDP gradually backs off the interval MSEARCH broadcasts are sent from 1/second to 1/minute. Discovery should be short lived as not to flood the network with broadcasts. Without a timeout the session should be closed explictly.
+[SSDP](https://en.wikipedia.org/wiki/Simple_Service_Discovery_Protocol) makes use of [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol), which is an unreliable transport, and even less reliable over WiFi. SwiftSSDP automatically repeats [MSEARCH](http://www.upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.0-20080424.pdf) broadcasts to ensure discovery of all devices. SwiftSSDP gradually backs off the interval between MSEARCH broadcasts are sent from 1/second to 1/minute. Discovery should be short lived as not to flood the network with broadcasts. Without a timeout the session should be closed explictly.
+
+## Timed Sessions
 
 ```swift
 public class DeviceDiscovery {
@@ -71,8 +74,34 @@ extension DeviceDiscovery: SSDPDiscoveryDelegate {
    }
     
    public func closedSession(_ session: SSDPDiscoverySession) {
+       print("Session closed\n")
    }
 
 }
 ```
 
+# Logging
+SwiftSSDP uses [SwiftAbstractLogger](https://github.com/pryomoax/SwiftAbstractLogger) for all logging. Logging can be independently configured for SwiftSSDP using the log category "SSDP". For convenience this is accessible via the `loggerDiscoveryCategory` constant.
+
+```swift
+// Attach a default (basic) console logger implementation to Logger
+Logger.attach(BasicConsoleLogger.logger)
+
+// Enable debug logging only for SSDPSwift
+Logger.configureLevel(category: loggerDiscoveryCategory, level: .Debug)
+```
+
+# Package Information
+
+## Requirements
+
+* Xcode 8
+* iOS 10.0+
+
+## Author
+
+Paul Bates, **[paul.a.bates@gmail.com](mailto:paul.a.bates@gmail.com)**
+
+## License
+
+SwiftSSDP is available under the **MIT license**. See the `LICENSE` file for more 
