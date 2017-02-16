@@ -1,12 +1,15 @@
 //
 //  SSDPCommon.swift
-//  SSDPKit
+//  SwiftSSDP
 //
 //  Created by Paul Bates on 2/6/17.
 //  Copyright © 2017 Paul Bates. All rights reserved.
 //
 
 import Foundation
+
+/// Category used for logging SSDP logs
+public let loggerDiscoveryCategory = "SSDP"
 
 /// SSDP M-Search, Notify, and Response header keys
 struct SSDPHeaderKeys {

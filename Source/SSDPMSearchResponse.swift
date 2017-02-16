@@ -1,6 +1,6 @@
 //
 //  SSDPMSearchResponse.swift
-//  SSDPKit
+//  SwiftSSDP
 //
 //  Created by Paul Bates on 2/8/17.
 //  Copyright © 2017 Paul Bates. All rights reserved.

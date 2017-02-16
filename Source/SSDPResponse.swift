@@ -1,6 +1,6 @@
 //
 //  SSDPMessageScanner.swift
-//  SSDPKit
+//  SwiftSSDP
 //
 //  Created by Paul Bates on 2/7/17.
 //  Copyright © 2017 Paul Bates. All rights reserved.

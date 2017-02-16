@@ -1,6 +1,6 @@
 //
 //  SSDPSearchTarget.swift
-//  SSDPKit
+//  SwiftSSDP
 //
 //  Created by Paul Bates on 2/7/17.
 //  Copyright © 2017 Paul Bates. All rights reserved.
@@ -27,7 +27,7 @@ public enum SSDPSearchTarget {
     ///
     /// - Parameters:
     ///     - rawValue: Raw search target from a response
-    public init?(rawValue: String) {
+    init?(rawValue: String) {
         let components = rawValue.components(separatedBy: ":")
         if components.isEmpty {
             return nil

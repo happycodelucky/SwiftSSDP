@@ -1,6 +1,6 @@
 //
 //  SSDPDiscoverySession.swift
-//  SSDPKit
+//  SwiftSSDP
 //
 //  Created by Paul Bates on 2/4/17.
 //  Copyright © 2017 Paul Bates. All rights reserved.
@@ -152,7 +152,7 @@ public class SSDPDiscoverySession: Equatable {
         
         // Log a check to ensure the session is correctly closed
         if now.timeIntervalSince(self.checkDate) > 30 {
-            logWarning(category: loggerDiscoveryCategory, message: "Session has been running longer than 30 seconds!")
+            logWarning(category: loggerDiscoveryCategory, "Session has been running longer than 30 seconds!")
             self.checkDate = now
         }
     }
@@ -200,12 +200,21 @@ public class SSDPDiscoverySession: Equatable {
 //
 
 extension SSDPDiscoverySession: SSDPDiscoveryDelegate {
-    public func discoveredDeviceOrService(response: SSDPMSearchResponse, session: SSDPDiscoverySession) {
-        // TODO: Add a write lock here to synchronize `internalDevices`
+    public func discoveredDevice(response: SSDPMSearchResponse, session: SSDPDiscoverySession) {
+        // TODO: Add a write lock here to synchronize `internalResponses`
         if !internalResponses.contains(response) {
             internalResponses.insert(response)
             
-            self.request.delegate.discoveredDeviceOrService(response: response, session: session)
+            self.request.delegate.discoveredDevice(response: response, session: session)
+        }
+    }
+    
+    public func discoveredService(response: SSDPMSearchResponse, session: SSDPDiscoverySession) {
+        // TODO: Add a write lock here to synchronize `internalResponses`
+        if !internalResponses.contains(response) {
+            internalResponses.insert(response)
+            
+            self.request.delegate.discoveredService(response: response, session: session)
         }
     }
     

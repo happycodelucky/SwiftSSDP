@@ -1,6 +1,6 @@
 //
 //  SSDPDiscovery.swift
-//  SSDPKit
+//  SwiftSSDP
 //
 //  Created by Paul Bates on 2/4/17.
 //  Copyright © 2017 Paul Bates. All rights reserved.
@@ -10,23 +10,33 @@ import Foundation
 import CocoaAsyncSocket
 import Weak
 
-let loggerDiscoveryCategory = "SSDP"
-
 //
 // MARK: - Protocols
 //
 
 /// Delegate for device discovery
 public protocol SSDPDiscoveryDelegate {
-    /// Called when a new device/service has been discovered
-    func discoveredDeviceOrService(response: SSDPMSearchResponse, session: SSDPDiscoverySession)
+    /// Called when a requested device has been discovered
+    func discoveredDevice(response: SSDPMSearchResponse, session: SSDPDiscoverySession)
+    
+    /// Called when a requested service has been discovered
+    func discoveredService(response: SSDPMSearchResponse, session: SSDPDiscoverySession)
     
     /// Called when a session has been closed
     func closedSession(_ session: SSDPDiscoverySession)
 }
 
 extension SSDPDiscoveryDelegate {
+    func discoveredDevice(response: SSDPMSearchResponse, session: SSDPDiscoverySession) {
+        
+    }
+    
+    func discoveredService(response: SSDPMSearchResponse, session: SSDPDiscoverySession) {
+        
+    }
+    
     func closedSession(_ session: SSDPDiscoverySession) {
+        
     }
 }
 
@@ -99,18 +109,24 @@ public class SSDPDiscovery: NSObject {
     // MARK: Private Functions
     //
     
-    func handle(message: SSDPMessage) {
-        var searchTarget: SSDPSearchTarget?
+    func handleMessage(_ message: SSDPMessage) {
+        var responseSearchTarget: SSDPSearchTarget?
         switch message {
         case .searchResponse(let response):
-            searchTarget = response.searchTarget
+            responseSearchTarget = response.searchTarget
             break
             
         default:
             break
         }
         
-        if searchTarget != nil {
+        if let searchTarget = responseSearchTarget {
+            // We should not be getting responses with ssdp:all
+            if searchTarget == .all {
+                logWarning("Received MSEARCH response with ssdp:all")
+                return;
+            }
+            
             for weakSession in activeSessions {
                 guard let session = weakSession.object else {
                     continue
@@ -118,11 +134,21 @@ public class SSDPDiscovery: NSObject {
                 
                 // Check if the session is capable of handling the target
                 let request = session.request
-                if request.searchTarget == searchTarget! || request.searchTarget == SSDPSearchTarget.all {
+                if request.searchTarget == searchTarget || request.searchTarget == SSDPSearchTarget.all {
                     switch message {
                     case .searchResponse(let response):
-                        session.discoveredDeviceOrService(response: response, session: session)
-                        break
+                        switch searchTarget {
+                        case .all:
+                            break
+                            
+                        case .rootDevice, .uuid, .deviceType:
+                            session.discoveredDevice(response: response, session: session)
+                            break
+                            
+                        case .serviceType:
+                            session.discoveredService(response: response, session: session)
+                            break
+                        }
                         
                     default:
                         break
@@ -233,32 +259,32 @@ extension SSDPDiscovery: GCDAsyncUdpSocketDelegate {
     }
     
     public func udpSocket(_ sock: GCDAsyncUdpSocket, didNotConnect error: Error?) {
-        logError(category: loggerDiscoveryCategory, message: "Unable to connect \(error)")
+        logError(category: loggerDiscoveryCategory, "Unable to connect \(error)")
     }
     
     public func udpSocket(_ sock: GCDAsyncUdpSocket, didSendDataWithTag tag: Int) {
     }
     
     public func udpSocket(_ sock: GCDAsyncUdpSocket, didNotSendDataWithTag tag: Int, dueToError error: Error?) {
-        logError(category: loggerDiscoveryCategory, message: "Unable to send data \(error)")
+        logError(category: loggerDiscoveryCategory, "Unable to send data \(error)")
     }
     
     public func udpSocket(_ sock: GCDAsyncUdpSocket, didReceive data: Data, fromAddress address: Data, withFilterContext filterContext: Any?) {
-        logVerbose(category: loggerDiscoveryCategory, message: "M-SEARCH response handled")
-        logDebug(category: loggerDiscoveryCategory, message: String(data: data, encoding: .utf8)!)
+        logVerbose(category: loggerDiscoveryCategory, "M-SEARCH response handled")
+        logDebug(category: loggerDiscoveryCategory, String(data: data, encoding: .utf8)!)
         
         // Ensure we have parsable data
         guard let messageString = String(data: data, encoding: .utf8) else {
-            logError(category: loggerDiscoveryCategory, message: "Unable to parse M-SEARCH response")
+            logError(category: loggerDiscoveryCategory, "Unable to parse M-SEARCH response")
             return
         }
         
         // Construct a real message based on parsing the string message
         guard let message = SSDPMessageParser.parse(response: messageString) else {
-            logError(category: loggerDiscoveryCategory, message: "incomplete M-SEARCH response\n\(messageString)")
+            logError(category: loggerDiscoveryCategory, "incomplete M-SEARCH response\n\(messageString)")
             return
         }
         
-        self.handle(message: message)
+        self.handleMessage(message)
     }
 }
