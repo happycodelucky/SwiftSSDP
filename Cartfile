@@ -1,0 +1,10 @@
+// SwiftSSDP
+
+# GCDAsyncSocket
+github "pryomoax/SwiftAbstractLogger.git" ~> 0.1
+
+# GCDAsyncSocket
+github "robbiehanson/CocoaAsyncSocket" ~> 7.5
+
+# Weak
+github "nvzqz/Weak" ~> 1.0
