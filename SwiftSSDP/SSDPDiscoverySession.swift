@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import Weak
+import SwiftAbstractLogger
 
 /// SSDPDiscovery based session returned from `SSDPDiscovery`'s `startDiscovery`.
 ///
@@ -141,12 +141,9 @@ public class SSDPDiscoverySession: Equatable {
         
         let interval = now.timeIntervalSince(self.startDate)
         let cadence = SSDPDiscoverySession.timerCadence(forTimeInterval: interval)
-        let weakSelf = Weak(self)
-        self.broadcastTimer = Timer.scheduledTimer(withTimeInterval: cadence, repeats: false, block: { (Timer) in
-            if let stringSelf = weakSelf.object {
-                if (stringSelf.phase == .searching) {
-                    stringSelf.sendSearchRequest()
-                }
+        self.broadcastTimer = Timer.scheduledTimer(withTimeInterval: cadence, repeats: false, block: { [unowned self] (Timer) in
+            if (self.phase == .searching) {
+                self.sendSearchRequest()
             }
         })
         

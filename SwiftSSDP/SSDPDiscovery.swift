@@ -8,6 +8,7 @@
 
 import Foundation
 import CocoaAsyncSocket
+import SwiftAbstractLogger
 import Weak
 
 //
@@ -123,7 +124,7 @@ public class SSDPDiscovery: NSObject {
         if let searchTarget = responseSearchTarget {
             // We should not be getting responses with ssdp:all
             if searchTarget == .all {
-                logWarning("Received MSEARCH response with ssdp:all")
+                SwiftAbstractLogger.logWarning("Received MSEARCH response with ssdp:all")
                 return;
             }
             
@@ -259,29 +260,29 @@ extension SSDPDiscovery: GCDAsyncUdpSocketDelegate {
     }
     
     public func udpSocket(_ sock: GCDAsyncUdpSocket, didNotConnect error: Error?) {
-        logError(category: loggerDiscoveryCategory, "Unable to connect \(error)")
+        SwiftAbstractLogger.logError(category: loggerDiscoveryCategory, "Unable to connect \(error)")
     }
     
     public func udpSocket(_ sock: GCDAsyncUdpSocket, didSendDataWithTag tag: Int) {
     }
     
     public func udpSocket(_ sock: GCDAsyncUdpSocket, didNotSendDataWithTag tag: Int, dueToError error: Error?) {
-        logError(category: loggerDiscoveryCategory, "Unable to send data \(error)")
+        SwiftAbstractLogger.logError(category: loggerDiscoveryCategory, "Unable to send data \(error)")
     }
     
     public func udpSocket(_ sock: GCDAsyncUdpSocket, didReceive data: Data, fromAddress address: Data, withFilterContext filterContext: Any?) {
-        logVerbose(category: loggerDiscoveryCategory, "M-SEARCH response handled")
-        logDebug(category: loggerDiscoveryCategory, String(data: data, encoding: .utf8)!)
+        SwiftAbstractLogger.logVerbose(category: loggerDiscoveryCategory, "M-SEARCH response handled")
+        SwiftAbstractLogger.logDebug(category: loggerDiscoveryCategory, String(data: data, encoding: .utf8)!)
         
         // Ensure we have parsable data
         guard let messageString = String(data: data, encoding: .utf8) else {
-            logError(category: loggerDiscoveryCategory, "Unable to parse M-SEARCH response")
+            SwiftAbstractLogger.logError(category: loggerDiscoveryCategory, "Unable to parse M-SEARCH response")
             return
         }
         
         // Construct a real message based on parsing the string message
         guard let message = SSDPMessageParser.parse(response: messageString) else {
-            logError(category: loggerDiscoveryCategory, "incomplete M-SEARCH response\n\(messageString)")
+            SwiftAbstractLogger.logError(category: loggerDiscoveryCategory, "incomplete M-SEARCH response\n\(messageString)")
             return
         }
         
