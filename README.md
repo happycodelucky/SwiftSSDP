@@ -1,4 +1,4 @@
-# SwiftSSDP ![](https://img.shields.io/badge/swift-3.0-orange.svg) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/pryomoax/SwiftSSDP/blob/master/LICENSE) [![GitHub release](https://img.shields.io/badge/version-v0.3.0-brightgreen.svg)](https://github.com/pryomoax/SwiftSSDP/releases) ![Github stable](https://img.shields.io/badge/stable-true-brightgreen.svg) 
+# SwiftSSDP ![](https://img.shields.io/badge/swift-3.0-orange.svg) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/pryomoax/SwiftSSDP/blob/master/LICENSE) [![GitHub release](https://img.shields.io/badge/version-v0.4.0-brightgreen.svg)](https://github.com/pryomoax/SwiftSSDP/releases) ![Github stable](https://img.shields.io/badge/stable-true-brightgreen.svg) 
 
 Simple Service Discovery Protocol ([SSDP](https://en.wikipedia.org/wiki/Simple_Service_Discovery_Protocol)) session based discovery package for Swift.
 
@@ -13,7 +13,7 @@ Simple Service Discovery Protocol ([SSDP](https://en.wikipedia.org/wiki/Simple_S
 SwiftSSDP is available through [Swift Package Manager](https://swift.org/package-manager/). To install it, simply add the following line to your `Package.swift` dependencies:
 
 ```
-.Package(url: "https://github.com/pryomoax/SwiftSSDP.git", majorVersion: 0, minor: 3)
+.Package(url: "https://github.com/pryomoax/SwiftSSDP.git", majorVersion: 0, minor: 4)
 ```
 
 ### Using Carthage
@@ -21,7 +21,7 @@ SwiftSSDP is available through [Carthage](https://github.com/Carthage/Carthage).
 
 ```
 # SwiftSSDP
-github "pryomoax/SwiftSSDP.git" ~> 0.3
+github "pryomoax/SwiftSSDP.git" ~> 0.4
 ```
 
 ### Using CocoaPods
