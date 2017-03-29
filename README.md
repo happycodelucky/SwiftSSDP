@@ -10,14 +10,14 @@ Simple Service Discovery Protocol ([SSDP](https://en.wikipedia.org/wiki/Simple_S
 [![GitHub cocoapod](https://img.shields.io/badge/cocoapods-soon-red.svg)](http://cocoapods.org/)
 
 ### Using Swift Package Manager
-SwiftSSDP is available through [Swift Package Manager](https://swift.org/package-manager/). To install it, simply add the following line to your `Package.swift` dependencies:
+SwiftSSDP is available through [Swift Package Manager](https://swift.org/package-manager/). To install it, add the following line to your `Package.swift` dependencies:
 
 ```
 .Package(url: "https://github.com/pryomoax/SwiftSSDP.git", majorVersion: 0, minor: 4)
 ```
 
 ### Using Carthage
-SwiftSSDP is available through [Carthage](https://github.com/Carthage/Carthage). To install it, simply add the following line to your `Cartfile`:
+SwiftSSDP is available through [Carthage](https://github.com/Carthage/Carthage). To install it, add the following line to your `Cartfile`:
 
 ```
 # SwiftSSDP
@@ -44,7 +44,7 @@ public class DeviceDiscovery {
 	private let discovery: SSDPDiscovery = SSDPDiscovery.defaultDiscovery
 	fileprivate var session: SSDPDiscoverySession?
 
-    public func searchForDevices() {
+	public func searchForDevices() {
 		// Create the request for Sonos ZonePlayer devices
 		let zonePlayerTarget = SSDPSearchTarget.deviceType(schema: SSDPSearchTarget.upnpOrgSchema, deviceType: "ZonePlayer", version: 1)
 		let request = SSDPMSearchRequest(delegate: self, searchTarget: zonePlayerTarget)
