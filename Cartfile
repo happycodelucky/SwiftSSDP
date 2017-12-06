@@ -4,7 +4,7 @@
 github "pryomoax/SwiftAbstractLogger.git" ~> 0.2
 
 # GCDAsyncSocket
-github "robbiehanson/CocoaAsyncSocket" ~> 7.5
+github "robbiehanson/CocoaAsyncSocket" ~> 7.6
 
 # Weak
-github "nvzqz/Weak" ~> 1.0
+github "nvzqz/Weak" "head"
