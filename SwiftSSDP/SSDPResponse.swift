@@ -74,7 +74,7 @@ class SSDPMessageParser {
             // Scan to the end of the line
             _ = scanLine(scanner: scanner)
             
-            return buffer as? String;
+            return buffer as String?
         }
         
         return nil
@@ -93,7 +93,7 @@ class SSDPMessageParser {
         
         var buffer: NSString? = nil
         if scanner.scanUpToCharacters(from: CharacterSet.newlines, into: &buffer) {
-            return buffer as? String;
+            return buffer as String?
         }
         
         return nil
@@ -112,7 +112,7 @@ class SSDPMessageParser {
         
         var buffer: NSString? = nil
         let delimiterSet = CharacterSet(charactersIn: ":").union(CharacterSet.whitespaces)
-        if scanner.scanUpToCharacters(from: delimiterSet, into: &buffer), let key = buffer as? String {
+        if scanner.scanUpToCharacters(from: delimiterSet, into: &buffer), let key = buffer as String? {
             if scanner.scanCharacters(from: delimiterSet, into: nil) && !scanner.isAtEnd {
                 if CharacterSet.newlines.contains(UnicodeScalar((scanner.string as NSString).character(at: scanner.scanLocation))!) {
                     return (key: key, value: "")
@@ -170,8 +170,8 @@ extension SSDPMSearchResponse {
         if let cacheControlString = headers[SSDPHeaderKeys.cacheControl] {
             let maxAgeRegEx = try! NSRegularExpression(pattern: "max\\-age[ \t]*=[ \t]*([0-9]+)")
             var matches: [String] = []
-            maxAgeRegEx.enumerateMatches(in: cacheControlString, range: NSRange(location: 0, length: cacheControlString.characters.count)) {(result : NSTextCheckingResult?, _, _) in
-                let capturedRange = result!.rangeAt(1)
+            for match in maxAgeRegEx.matches(in: cacheControlString, range: NSRange(location:0, length: cacheControlString.utf8.count)) {
+                let capturedRange = match.rangeAt(1)
                 if !NSEqualRanges(capturedRange, NSMakeRange(NSNotFound, 0)) {
                     let theResult = (cacheControlString as NSString).substring(with: capturedRange)
                     matches.append(theResult)

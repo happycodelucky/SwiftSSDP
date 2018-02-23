@@ -260,14 +260,22 @@ extension SSDPDiscovery: GCDAsyncUdpSocketDelegate {
     }
     
     public func udpSocket(_ sock: GCDAsyncUdpSocket, didNotConnect error: Error?) {
-        SwiftAbstractLogger.logError(category: loggerDiscoveryCategory, "Unable to connect \(error)")
+        if (error != nil) {
+            SwiftAbstractLogger.logError(category: loggerDiscoveryCategory, "Unable to connect \(String(describing: error))")
+        } else {
+            SwiftAbstractLogger.logError(category: loggerDiscoveryCategory, "Unable to connect")
+        }
     }
     
     public func udpSocket(_ sock: GCDAsyncUdpSocket, didSendDataWithTag tag: Int) {
     }
     
     public func udpSocket(_ sock: GCDAsyncUdpSocket, didNotSendDataWithTag tag: Int, dueToError error: Error?) {
-        SwiftAbstractLogger.logError(category: loggerDiscoveryCategory, "Unable to send data \(error)")
+        if (error != nil) {
+            SwiftAbstractLogger.logError(category: loggerDiscoveryCategory, "Unable to send data \(String(describing: error))")
+        } else {
+            SwiftAbstractLogger.logError(category: loggerDiscoveryCategory, "Unable to send data")
+        }
     }
     
     public func udpSocket(_ sock: GCDAsyncUdpSocket, didReceive data: Data, fromAddress address: Data, withFilterContext filterContext: Any?) {
