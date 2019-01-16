@@ -26,7 +26,7 @@ public struct SSDPMSearchRequest {
     public var message: String {
         var headers: SSDPHeaders = [
             SSDPHeaderKeys.host: "\(SSDPDiscovery.ssdpHost):\(SSDPDiscovery.ssdpPort)",
-            SSDPHeaderKeys.man: self.man.rawValue,
+            SSDPHeaderKeys.man: "\"\(self.man.rawValue)\"",
             SSDPHeaderKeys.maxWait: self.maxWaitTime.description,
             SSDPHeaderKeys.searchTarget: self.searchTarget.description
         ]
@@ -41,6 +41,7 @@ public struct SSDPMSearchRequest {
         for (key, value) in headers {
             message.append("\(key): \(value)\r\n")
         }
+        message.append("\r\n")
         return message
     }
 
