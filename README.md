@@ -9,6 +9,10 @@ Simple Service Discovery Protocol ([SSDP](https://en.wikipedia.org/wiki/Simple_S
 [![GitHub carthage](https://img.shields.io/badge/carthage-supported-brightgreen.svg)](https://github.com/Carthage/Carthage)
 [![GitHub cocoapod](https://img.shields.io/badge/cocoapods-soon-red.svg)](http://cocoapods.org/)
 
+### !!!Update!!!
+
+**Update**: I'm actively working on an all new version of this package, with no external dependencies. This will be compatible with SPM and using the new Networking Framework.
+
 ### Using Swift Package Manager
 SwiftSSDP is available through [Swift Package Manager](https://swift.org/package-manager/). To install it, add the following line to your `Package.swift` dependencies:
 
