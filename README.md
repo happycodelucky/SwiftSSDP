@@ -1,5 +1,7 @@
 # SwiftSSDP ![](https://img.shields.io/badge/swift-4.0-orange.svg) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/pryomoax/SwiftSSDP/blob/master/LICENSE) [![GitHub release](https://img.shields.io/badge/version-v0.5.1-brightgreen.svg)](https://github.com/pryomoax/SwiftSSDP/releases) ![Github stable](https://img.shields.io/badge/stable-true-brightgreen.svg)
 
+> Update: Unfortunately I do not have time to maintain this package 
+
 Simple Service Discovery Protocol ([SSDP](https://en.wikipedia.org/wiki/Simple_Service_Discovery_Protocol)) session based discovery package for Swift.
 
 # Package Management
@@ -8,14 +10,6 @@ Simple Service Discovery Protocol ([SSDP](https://en.wikipedia.org/wiki/Simple_S
 [![GitHub spm](https://img.shields.io/badge/spm-supported-brightgreen.svg)](https://swift.org/package-manager/)
 [![GitHub carthage](https://img.shields.io/badge/carthage-supported-brightgreen.svg)](https://github.com/Carthage/Carthage)
 [![GitHub cocoapod](https://img.shields.io/badge/cocoapods-soon-red.svg)](http://cocoapods.org/)
-
----
-
-### !!!Update!!!
-
-**Update**: I'm actively working on an all new version of this package, with no external dependencies. This will be compatible with SPM and using the new Networking Framework.
-
----
 
 ### Using Swift Package Manager
 SwiftSSDP is available through [Swift Package Manager](https://swift.org/package-manager/). To install it, add the following line to your `Package.swift` dependencies:
