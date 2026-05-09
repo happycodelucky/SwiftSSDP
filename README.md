@@ -1,6 +1,6 @@
 # SwiftSSDP
 
-![Swift 5.9](https://img.shields.io/badge/swift-5.9-orange.svg?style=for-the-badge&logo=swift)
+![Swift 6](https://img.shields.io/badge/swift-6-orange.svg?style=for-the-badge&logo=swift)
 ![Platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20macOS%20%7C%20tvOS-blue.svg?style=for-the-badge&logo=apple)
 [![CI](https://img.shields.io/github/actions/workflow/status/happycodelucky/SwiftSSDP/ci.yml?style=for-the-badge&label=ci)](https://github.com/happycodelucky/SwiftSSDP/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/happycodelucky/SwiftSSDP?style=for-the-badge)](https://github.com/happycodelucky/SwiftSSDP/releases/latest)
@@ -213,9 +213,11 @@ Categories: `discovery`, `transport`, `listener`, `parser`.
 
 ## Requirements
 
-- **Swift:** 5.9+
-- **Xcode:** 15+
+- **Swift:** 6.0+ (Swift 6 language mode with strict concurrency checking)
+- **Xcode:** 16+
 - **Platforms:** iOS 17, macOS 14, tvOS 17 (watchOS not supported — multicast is unavailable on watchOS)
+
+The library compiles cleanly under `-strict-concurrency=complete -warnings-as-errors`. Public API surface is fully `Sendable` so it composes naturally with actor-isolated callers.
 
 ## License
 

@@ -17,5 +17,5 @@ public enum SwiftSSDP {
     ///
     /// > Note: This constant is rewritten by `.github/workflows/release.yml` whenever a
     /// > release is published. Do not edit it by hand outside of that workflow.
-    public static let version = "2.0.0"
+    public static let version = "2.1.0"
 }
