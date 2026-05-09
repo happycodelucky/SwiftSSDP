@@ -1,109 +1,228 @@
-# SwiftSSDP ![](https://img.shields.io/badge/swift-4.0-orange.svg) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/pryomoax/SwiftSSDP/blob/master/LICENSE) [![GitHub release](https://img.shields.io/badge/version-v0.5.1-brightgreen.svg)](https://github.com/pryomoax/SwiftSSDP/releases) ![Github stable](https://img.shields.io/badge/stable-true-brightgreen.svg)
+# SwiftSSDP
 
-> Update: Unfortunately I do not have time to maintain this package 
+![Swift 6](https://img.shields.io/badge/swift-6-orange.svg?style=for-the-badge&logo=swift)
+![Platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20macOS%20%7C%20tvOS-blue.svg?style=for-the-badge&logo=apple)
+[![CI](https://img.shields.io/github/actions/workflow/status/happycodelucky/SwiftSSDP/ci.yml?style=for-the-badge&label=ci)](https://github.com/happycodelucky/SwiftSSDP/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/happycodelucky/SwiftSSDP?style=for-the-badge)](https://github.com/happycodelucky/SwiftSSDP/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-orange.svg?style=for-the-badge)](LICENSE)
+[![Maintained](https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=for-the-badge)](https://github.com/happycodelucky/SwiftSSDP/graphs/commit-activity)
 
-Simple Service Discovery Protocol ([SSDP](https://en.wikipedia.org/wiki/Simple_Service_Discovery_Protocol)) session based discovery package for Swift.
+A modern Swift package for [Simple Service Discovery Protocol](https://en.wikipedia.org/wiki/Simple_Service_Discovery_Protocol) (SSDP) — the discovery layer of UPnP. SwiftSSDP supports both:
 
-# Package Management
+- **Active discovery** — sending M-SEARCH broadcasts and collecting responses.
+- **Passive listening** — subscribing to unsolicited NOTIFY broadcasts (`alive`, `byebye`, `update`).
+
+The whole API is async/await — no delegates, no Combine, no callbacks. The only dependency is Apple's `Network.framework`.
+
+> **v2.0.0 is a breaking re-debut.** If you're upgrading from 0.5.x see [MIGRATION.md](MIGRATION.md). (No 1.x was ever released — the version jump goes 0.5.x → 2.0.0 to signal a breaking change without overloading 1.0 semantics that some consumers may have already pinned against.)
 
 ## Installation
-[![GitHub spm](https://img.shields.io/badge/spm-supported-brightgreen.svg)](https://swift.org/package-manager/)
-[![GitHub carthage](https://img.shields.io/badge/carthage-supported-brightgreen.svg)](https://github.com/Carthage/Carthage)
-[![GitHub cocoapod](https://img.shields.io/badge/cocoapods-soon-red.svg)](http://cocoapods.org/)
 
-### Using Swift Package Manager
-SwiftSSDP is available through [Swift Package Manager](https://swift.org/package-manager/). To install it, add the following line to your `Package.swift` dependencies:
-
-```
-.Package(url: "https://github.com/pryomoax/SwiftSSDP.git", majorVersion: 0, minor: 5)
-```
-
-### Using Carthage
-SwiftSSDP is available through [Carthage](https://github.com/Carthage/Carthage). To install it, add the following line to your `Cartfile`:
-
-```
-# SwiftSSDP
-github "pryomoax/SwiftSSDP.git" ~> 0.5
-```
-
-### Using CocoaPods
-
-SwiftSSDP is currently not supported by CocoaPods (coming soon)
-
-# Usage
-
-[SSDP](https://en.wikipedia.org/wiki/Simple_Service_Discovery_Protocol) can be used for many things, discovering devices or services. Sonos uses SSDP for device discovery and using the `urn:schemas-upnp-org:device:ZonePlayer:1` search target (ST) devices can be discovered and inspected.
-
-Below is a simple class to start and stop Sonos device discovery. It uses a `10` second timeout, which will automatically close the discovery session `session` if not closed explictly.
-
-[SSDP](https://en.wikipedia.org/wiki/Simple_Service_Discovery_Protocol) makes use of [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol), which is an unreliable transport, and even less reliable over WiFi. SwiftSSDP automatically repeats [MSEARCH](http://www.upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.0-20080424.pdf) broadcasts to ensure discovery of all devices. SwiftSSDP gradually backs off the interval between MSEARCH broadcasts are sent from 1/second to 1/minute. Discovery should be short lived as not to flood the network with broadcasts. Without a timeout the session should be closed explictly.
-
-## Timed Sessions
+Add SwiftSSDP via Swift Package Manager:
 
 ```swift
-public class DeviceDiscovery {
+.package(url: "https://github.com/happycodelucky/SwiftSSDP.git", from: "2.0.0")
+```
 
-	private let discovery: SSDPDiscovery = SSDPDiscovery.defaultDiscovery
-	fileprivate var session: SSDPDiscoverySession?
+Then add `"SwiftSSDP"` to the dependencies of any target that needs it. SwiftSSDP is SPM-only — no Carthage, no CocoaPods.
 
-	public func searchForDevices() {
-		// Create the request for Sonos ZonePlayer devices
-		let zonePlayerTarget = SSDPSearchTarget.deviceType(schema: SSDPSearchTarget.upnpOrgSchema, deviceType: "ZonePlayer", version: 1)
-		let request = SSDPMSearchRequest(delegate: self, searchTarget: zonePlayerTarget)
-    
-		// Start a discovery session for the request and timeout after 10 seconds of searching.
-		self.session = try! discovery.startDiscovery(request: request, timeout: 10.0)
-	}
-	
-	public func stopSearching() {
-		self.session?.close()
-		self.session = nil
-	}
-	
+## Usage
+
+### Active discovery (M-SEARCH)
+
+```swift
+import SwiftSSDP
+
+let discovery = SSDPDiscovery()
+
+// Streaming form — see results as they arrive.
+for try await response in discovery.search(for: .rootDevice, timeout: 10) {
+    print("Found \(response.usn) at \(response.location)")
 }
 ```
 
-To handle the discovery implement the `SSDPDiscoveryDelegate` protocol, and use when initializing a `SSDPMSearchReqest`
+For convenience, collect everything into a deduplicated array:
 
 ```swift
-extension DeviceDiscovery: SSDPDiscoveryDelegate {
-    
-	public func discoveredDevice(response: SSDPMSearchResponse, session: SSDPDiscoverySession) {
-       print("Found device \(response)\n")
-   }
-    
-   public func discoveredService(response: SSDPMSearchResponse, session: SSDPDiscoverySession) {
-   }
-    
-   public func closedSession(_ session: SSDPDiscoverySession) {
-       print("Session closed\n")
-   }
+let devices = try await discovery
+    .search(for: .mediaServer, timeout: 10)
+    .collect()
+print("Found \(devices.count) media servers")
+```
 
+Or stop at the first response — handy for "find any device of type X, then move on":
+
+```swift
+if let device = try await discovery.firstDevice(for: .mediaServer, timeout: 10) {
+    print("First media server: \(device.usn)")
+}
+// firstDevice() returns nil if the timeout elapses before any response arrives.
+```
+
+`firstDevice()` cancels the underlying search the moment the response arrives — sockets, retransmits, and timers all tear down promptly without waiting for the timeout.
+
+### Cancelling a search
+
+Cancellation in Swift Concurrency is cooperative — the library's stream finishes cleanly whenever the consumer signals it's done, and the underlying socket and retransmit task tear down automatically. There are three idiomatic ways:
+
+**1. Break out of the loop** — when you're iterating and decide you've seen enough:
+
+```swift
+for try await response in discovery.search(for: .rootDevice) {
+    if response.server?.contains("Sonos") == true {
+        handle(response)
+        break          // ends the search, tears down sockets
+    }
 }
 ```
 
-# Logging
-SwiftSSDP uses [SwiftAbstractLogger](https://github.com/pryomoax/SwiftAbstractLogger) for all logging. Logging can be independently configured for SwiftSSDP using the log category "SSDP". For convenience this is accessible via the `loggerDiscoveryCategory` constant.
+**2. Cancel the parent `Task`** — when the search is running in a Task and an external trigger (button tap, view disappearing, timeout) needs to stop it:
 
 ```swift
-// Attach a default (basic) console logger implementation to Logger
-Logger.attach(BasicConsoleLogger.logger)
+final class DeviceFinder {
+    private var searchTask: Task<Void, Error>?
 
-// Enable debug logging only for SSDPSwift
-Logger.configureLevel(category: loggerDiscoveryCategory, level: .Debug)
+    func startSearching() {
+        searchTask = Task {
+            for try await response in discovery.search(for: .rootDevice) {
+                await handle(response)
+            }
+        }
+    }
+
+    func stopSearching() {
+        searchTask?.cancel()   // Task.isCancelled becomes true; loop exits cleanly
+        searchTask = nil
+    }
+}
 ```
 
-# Package Information
+**3. Use a `timeout` parameter** — simplest of all when you know how long to wait:
+
+```swift
+// Stream finishes cleanly after 10 seconds, regardless of whether anything was found.
+let devices = try await discovery
+    .search(for: .rootDevice, timeout: 10)
+    .collect()
+```
+
+All three paths run the same teardown: the retransmit task is cancelled, the socket subscriber is removed, and (if no other consumers remain) the underlying multicast socket closes.
+
+### Custom requests
+
+For finer control (custom headers, longer `MX`), pass an explicit `SSDPMSearchRequest`:
+
+```swift
+let request = SSDPMSearchRequest(
+    searchTarget: .deviceType(schema: .upnpOrgSchema, deviceType: "ZonePlayer", version: 1),
+    maxWait: 3,
+    otherHeaders: ["X-MyApp-Token": "abc123"]
+)
+for try await response in discovery.search(request, timeout: 10) {
+    print(response)
+}
+```
+
+The library follows UPnP recommendations and retransmits the M-SEARCH at a stepped cadence (1s up to 5s elapsed → 3s up to 10s → 10s up to 60s → 60s thereafter). UDP is unreliable, especially over Wi-Fi, so this materially improves discovery completeness.
+
+### Passive listening (NOTIFY)
+
+> **iOS / iPadOS / tvOS apps must request the multicast entitlement.** See [iOS multicast entitlement](#ios-multicast-entitlement) below before deploying.
+
+```swift
+let discovery = SSDPDiscovery()
+
+for try await notification in discovery.notifications() {
+    switch notification {
+    case .alive(let advertisement):
+        print("→ \(advertisement.usn) joined at \(advertisement.location?.absoluteString ?? "?")")
+    case .byebye(let advertisement):
+        print("← \(advertisement.usn) left")
+    case .update(let advertisement):
+        print("⟳ \(advertisement.usn) updated boot ID")
+    }
+}
+```
+
+Notification streams are long-lived — they continue until the consumer breaks the `for try await` loop. Multiple concurrent calls share one underlying multicast group join; the join is reference-counted and tears down when the last subscriber cancels.
+
+Filtering is just a `where` clause:
+
+```swift
+for try await n in discovery.notifications() where n.notificationTarget == .rootDevice {
+    print("Root device: \(n.advertisement.usn)")
+}
+```
+
+### Search targets
+
+Common UPnP forum-defined targets are available as static members:
+
+```swift
+SSDPSearchTarget.all                       // ssdp:all
+SSDPSearchTarget.rootDevice                // upnp:rootdevice
+SSDPSearchTarget.mediaServer               // urn:schemas-upnp-org:device:MediaServer:1
+SSDPSearchTarget.mediaRenderer
+SSDPSearchTarget.internetGatewayDevice
+SSDPSearchTarget.avTransportService        // urn:schemas-upnp-org:service:AVTransport:1
+SSDPSearchTarget.contentDirectoryService
+// …and more — see SSDPUPnP.swift
+```
+
+For other vendors or versions, build the target directly:
+
+```swift
+let zonePlayer: SSDPSearchTarget = .deviceType(
+    schema: .upnpOrgSchema,
+    deviceType: "ZonePlayer",
+    version: 1
+)
+```
+
+## iOS multicast entitlement
+
+On iOS, iPadOS, and tvOS (14+), joining the SSDP multicast group `239.255.255.250` requires the **`com.apple.developer.networking.multicast`** entitlement. Apple gates this entitlement behind a manual application form:
+
+> <https://developer.apple.com/contact/request/networking-multicast>
+
+Without the entitlement, `discovery.notifications()` will throw `SSDPError.multicastEntitlementMissing` on the first iteration. `discovery.search(...)` does not require the entitlement (M-SEARCH unicast replies don't need group membership).
+
+**macOS does not require this entitlement.** Run the demo CLI on a Mac to verify behavior before deploying to iOS.
+
+## Demo
+
+A small CLI tool lives under `Examples/ssdp-demo`:
+
+```sh
+# Search the LAN for ten seconds and print everything.
+swift run --package-path Examples/ssdp-demo ssdp-demo search ssdp:all --timeout 10
+
+# Listen for NOTIFY broadcasts indefinitely (Ctrl-C to stop).
+swift run --package-path Examples/ssdp-demo ssdp-demo listen
+```
+
+## Logging
+
+SwiftSSDP logs through `os.Logger` under the subsystem `com.pryomoax.SwiftSSDP`. View live logs in Console.app (filter by subsystem) or via `log stream`:
+
+```sh
+log stream --predicate 'subsystem == "com.pryomoax.SwiftSSDP"' --level debug
+```
+
+Categories: `discovery`, `transport`, `listener`, `parser`.
 
 ## Requirements
 
-* Xcode 8
-* iOS 10.0+
+- **Swift:** 6.0+ (Swift 6 language mode with strict concurrency checking)
+- **Xcode:** 16+
+- **Platforms:** iOS 17, macOS 14, tvOS 17 (watchOS not supported — multicast is unavailable on watchOS)
 
-## Author
-
-Paul Bates, **[paul.a.bates@gmail.com](mailto:paul.a.bates@gmail.com)**
+The library compiles cleanly under `-strict-concurrency=complete -warnings-as-errors`. Public API surface is fully `Sendable` so it composes naturally with actor-isolated callers.
 
 ## License
 
-SwiftSSDP is available under the **MIT license**. See the `LICENSE` file for more 
+MIT — see [LICENSE](LICENSE).
+
+## Author
+
+Paul Bates · [paul.a.bates@gmail.com](mailto:paul.a.bates@gmail.com)

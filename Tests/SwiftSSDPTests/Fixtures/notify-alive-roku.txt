@@ -1,0 +1,11 @@
+NOTIFY * HTTP/1.1
+HOST: 239.255.255.250:1900
+CACHE-CONTROL: max-age=1800
+LOCATION: http://192.168.1.77:8060/dial/dd.xml
+NT: urn:dial-multiscreen-org:device:dial:1
+NTS: ssdp:alive
+SERVER: Roku UPnP/1.0 Roku/12.0.0
+USN: uuid:roku:ecp:YR0070123456::urn:dial-multiscreen-org:device:dial:1
+BOOTID.UPNP.ORG: 7
+CONFIGID.UPNP.ORG: 1
+

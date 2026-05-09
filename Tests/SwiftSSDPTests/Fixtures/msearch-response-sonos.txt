@@ -1,0 +1,11 @@
+HTTP/1.1 200 OK
+CACHE-CONTROL: max-age = 1800
+EXT:
+LOCATION: http://192.168.1.42:1400/xml/device_description.xml
+SERVER: Linux UPnP/1.0 Sonos/76.1-37220 (ZP120)
+ST: urn:schemas-upnp-org:device:ZonePlayer:1
+USN: uuid:RINCON_000E58A1B2C300400::urn:schemas-upnp-org:device:ZonePlayer:1
+X-RINCON-HOUSEHOLD: Sonos_household_1
+X-RINCON-BOOTSEQ: 23
+DATE: Sun, 06 Nov 1994 08:49:37 GMT
+
