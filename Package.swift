@@ -1,4 +1,4 @@
-// swift-tools-version:5.9
+// swift-tools-version:6.0
 //
 //  Package.swift
 //  SwiftSSDP
@@ -24,7 +24,10 @@ let package = Package(
     targets: [
         .target(
             name: "SwiftSSDP",
-            path: "Sources/SwiftSSDP"
+            path: "Sources/SwiftSSDP",
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
         ),
         .testTarget(
             name: "SwiftSSDPTests",
@@ -32,6 +35,9 @@ let package = Package(
             path: "Tests/SwiftSSDPTests",
             resources: [
                 .copy("Fixtures"),
+            ],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
             ]
         ),
     ]
