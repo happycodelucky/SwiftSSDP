@@ -1,0 +1,10 @@
+NOTIFY * HTTP/1.1
+HOST: 239.255.255.250:1900
+LOCATION: http://192.168.1.42:1400/xml/device_description.xml
+NT: upnp:rootdevice
+NTS: ssdp:update
+USN: uuid:RINCON_000E58A1B2C300400::upnp:rootdevice
+BOOTID.UPNP.ORG: 23
+NEXTBOOTID.UPNP.ORG: 24
+CONFIGID.UPNP.ORG: 1
+

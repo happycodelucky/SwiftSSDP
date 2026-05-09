@@ -1,0 +1,6 @@
+NOTIFY * HTTP/1.1
+HOST: 239.255.255.250:1900
+NT: urn:schemas-upnp-org:device:MediaServer:1
+NTS: ssdp:byebye
+USN: uuid:00000000-0000-0000-0000-aabbccddeeff::urn:schemas-upnp-org:device:MediaServer:1
+

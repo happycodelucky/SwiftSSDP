@@ -1,0 +1,7 @@
+HTTP/1.1 200 OK
+CACHE-CONTROL: max-age=300
+LOCATION: http://192.168.1.99:80/description.xml
+SERVER: SomeOldDevice/1.0 UPnP/1.0
+ST: upnp:rootdevice
+USN: uuid:malformed-but-real::upnp:rootdevice
+
