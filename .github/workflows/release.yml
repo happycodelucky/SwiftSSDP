@@ -1,0 +1,121 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version without the v prefix (e.g. 2.0.0)
+        required: true
+        type: string
+      notes:
+        description: Release notes for GitHub Releases (optional — auto-generated if blank)
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    env:
+      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate version format
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ ! "$INPUT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.-]+)?$ ]]; then
+            echo "::error::Version must be SemVer (e.g. 2.0.0 or 2.0.0-beta.1). Got: $INPUT_VERSION"
+            exit 1
+          fi
+          echo "TAG=v${INPUT_VERSION}" >> "$GITHUB_ENV"
+
+      - name: Verify tag does not already exist
+        env:
+          TAG: ${{ env.TAG }}
+        run: |
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "::error::Tag $TAG already exists locally."
+            exit 1
+          fi
+          if git ls-remote --tags origin "$TAG" | grep -q "refs/tags/$TAG"; then
+            echo "::error::Tag $TAG already exists on origin."
+            exit 1
+          fi
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Build
+        run: swift build
+
+      - name: Test
+        run: swift test
+
+      - name: Update SwiftSSDP.version constant
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          # Rewrite the version literal in Sources/SwiftSSDP/SwiftSSDP.swift.
+          # The constant is `public static let version = "X.Y.Z"`; we replace the
+          # quoted literal in place. Using a delimiter that won't appear in version
+          # strings keeps sed simple.
+          sed -i.bak -E \
+            "s/public static let version = \"[^\"]+\"/public static let version = \"${INPUT_VERSION}\"/" \
+            Sources/SwiftSSDP/SwiftSSDP.swift
+          rm -f Sources/SwiftSSDP/SwiftSSDP.swift.bak
+
+          # Verify the change actually landed.
+          if ! grep -q "public static let version = \"${INPUT_VERSION}\"" Sources/SwiftSSDP/SwiftSSDP.swift; then
+            echo "::error::Failed to update version constant."
+            cat Sources/SwiftSSDP/SwiftSSDP.swift
+            exit 1
+          fi
+
+      - name: Re-build with updated version
+        run: swift build
+
+      - name: Commit version bump
+        env:
+          TAG: ${{ env.TAG }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          if git diff --quiet Sources/SwiftSSDP/SwiftSSDP.swift; then
+            echo "Version constant already at ${INPUT_VERSION} — nothing to commit."
+          else
+            git add Sources/SwiftSSDP/SwiftSSDP.swift
+            git commit -m "Bump version to ${INPUT_VERSION}"
+            BRANCH="${GITHUB_REF#refs/heads/}"
+            git push origin "HEAD:${BRANCH}"
+          fi
+
+      - name: Create and push tag
+        env:
+          TAG: ${{ env.TAG }}
+        run: |
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+
+      - name: Publish GitHub release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TAG: ${{ env.TAG }}
+          NOTES: ${{ inputs.notes }}
+        run: |
+          if [[ -n "$NOTES" ]]; then
+            gh release create "$TAG" --title "$TAG" --notes "$NOTES"
+          else
+            gh release create "$TAG" --title "$TAG" --generate-notes
+          fi

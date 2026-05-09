@@ -1,9 +1,11 @@
 # SwiftSSDP
 
-![Swift 5.9](https://img.shields.io/badge/swift-5.9-orange.svg)
-![Platforms](https://img.shields.io/badge/platforms-iOS%2017%20%7C%20macOS%2014%20%7C%20tvOS%2017-blue.svg)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-2.0.0-brightgreen.svg)
+![Swift 5.9](https://img.shields.io/badge/swift-5.9-orange.svg?style=for-the-badge&logo=swift)
+![Platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20macOS%20%7C%20tvOS-blue.svg?style=for-the-badge&logo=apple)
+[![CI](https://img.shields.io/github/actions/workflow/status/happycodelucky/SwiftSSDP/ci.yml?style=for-the-badge&label=ci)](https://github.com/happycodelucky/SwiftSSDP/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/happycodelucky/SwiftSSDP?style=for-the-badge)](https://github.com/happycodelucky/SwiftSSDP/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-orange.svg?style=for-the-badge)](LICENSE)
+[![Maintained](https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=for-the-badge)](https://github.com/happycodelucky/SwiftSSDP/graphs/commit-activity)
 
 A modern Swift package for [Simple Service Discovery Protocol](https://en.wikipedia.org/wiki/Simple_Service_Discovery_Protocol) (SSDP) — the discovery layer of UPnP. SwiftSSDP supports both:
 
@@ -19,7 +21,7 @@ The whole API is async/await — no delegates, no Combine, no callbacks. The onl
 Add SwiftSSDP via Swift Package Manager:
 
 ```swift
-.package(url: "https://github.com/pryomoax/SwiftSSDP.git", from: "2.0.0")
+.package(url: "https://github.com/happycodelucky/SwiftSSDP.git", from: "2.0.0")
 ```
 
 Then add `"SwiftSSDP"` to the dependencies of any target that needs it. SwiftSSDP is SPM-only — no Carthage, no CocoaPods.
