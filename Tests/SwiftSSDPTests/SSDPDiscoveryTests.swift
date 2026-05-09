@@ -48,6 +48,38 @@ struct SSDPDiscoverySearchTests {
         #expect(collected.count == 2)
     }
 
+    @Test("firstDevice() returns the first response and tears down the search")
+    func firstDeviceReturnsFirstResponse() async throws {
+        let mock = MockTransport()
+        let discovery = SSDPDiscovery(transport: mock)
+
+        let task = Task {
+            try await discovery.firstDevice(for: .all, timeout: 5)
+        }
+        try await waitForSearchSubscriber(in: mock)
+
+        await mock.deliverSearchReply(try fixture("msearch-response-hue"))
+        // Even if a second response is delivered, firstDevice() only returns the first.
+        await mock.deliverSearchReply(try fixture("msearch-response-sonos"))
+
+        let response = try await task.value
+        #expect(response != nil)
+        #expect(response?.location ==
+            URL(string: "http://192.168.1.55:80/description.xml"))
+
+        // After firstDevice() returns, the underlying subscription should tear down.
+        try await waitFor { await mock.searchSubscriberCount == 0 }
+        #expect(await mock.searchSubscriberCount == 0)
+    }
+
+    @Test("firstDevice() returns nil when the stream times out without a response")
+    func firstDeviceReturnsNilOnTimeout() async throws {
+        let mock = MockTransport()
+        let discovery = SSDPDiscovery(transport: mock)
+        let response = try await discovery.firstDevice(for: .rootDevice, timeout: 0.2)
+        #expect(response == nil)
+    }
+
     @Test(".collect() deduplicates by (usn, location)")
     func collectDeduplicates() async throws {
         let mock = MockTransport()

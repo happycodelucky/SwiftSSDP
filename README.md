@@ -50,6 +50,66 @@ let devices = try await discovery
 print("Found \(devices.count) media servers")
 ```
 
+Or stop at the first response — handy for "find any device of type X, then move on":
+
+```swift
+if let device = try await discovery.firstDevice(for: .mediaServer, timeout: 10) {
+    print("First media server: \(device.usn)")
+}
+// firstDevice() returns nil if the timeout elapses before any response arrives.
+```
+
+`firstDevice()` cancels the underlying search the moment the response arrives — sockets, retransmits, and timers all tear down promptly without waiting for the timeout.
+
+### Cancelling a search
+
+Cancellation in Swift Concurrency is cooperative — the library's stream finishes cleanly whenever the consumer signals it's done, and the underlying socket and retransmit task tear down automatically. There are three idiomatic ways:
+
+**1. Break out of the loop** — when you're iterating and decide you've seen enough:
+
+```swift
+for try await response in discovery.search(for: .rootDevice) {
+    if response.server?.contains("Sonos") == true {
+        handle(response)
+        break          // ends the search, tears down sockets
+    }
+}
+```
+
+**2. Cancel the parent `Task`** — when the search is running in a Task and an external trigger (button tap, view disappearing, timeout) needs to stop it:
+
+```swift
+final class DeviceFinder {
+    private var searchTask: Task<Void, Error>?
+
+    func startSearching() {
+        searchTask = Task {
+            for try await response in discovery.search(for: .rootDevice) {
+                await handle(response)
+            }
+        }
+    }
+
+    func stopSearching() {
+        searchTask?.cancel()   // Task.isCancelled becomes true; loop exits cleanly
+        searchTask = nil
+    }
+}
+```
+
+**3. Use a `timeout` parameter** — simplest of all when you know how long to wait:
+
+```swift
+// Stream finishes cleanly after 10 seconds, regardless of whether anything was found.
+let devices = try await discovery
+    .search(for: .rootDevice, timeout: 10)
+    .collect()
+```
+
+All three paths run the same teardown: the retransmit task is cancelled, the socket subscriber is removed, and (if no other consumers remain) the underlying multicast socket closes.
+
+### Custom requests
+
 For finer control (custom headers, longer `MX`), pass an explicit `SSDPMSearchRequest`:
 
 ```swift

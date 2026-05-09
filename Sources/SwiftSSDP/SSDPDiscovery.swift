@@ -121,8 +121,13 @@ public actor SSDPDiscovery {
 
                     await children.set(retransmitter: retransmitter, timeoutTask: timeoutTask)
 
-                    // Drain datagrams, parse, filter, yield.
-                    for try await datagram in datagrams {
+                    // Drain datagrams, parse, filter, yield. We explicitly hold the
+                    // transport's iterator so we can break out (and let it deinit) the
+                    // moment yielding to the consumer signals the consumer is done.
+                    var iterator = datagrams.makeAsyncIterator()
+                    while let datagram = try await iterator.next() {
+                        if Task.isCancelled { break }
+
                         guard let raw = String(data: datagram.data, encoding: .utf8),
                               let message = SSDPMessageParser.parse(raw)
                         else {
@@ -138,7 +143,13 @@ public actor SSDPDiscovery {
                         if request.searchTarget != .all && response.searchTarget != request.searchTarget {
                             continue
                         }
-                        continuation.yield(response)
+                        // YieldResult tells us whether the consumer's stream is still
+                        // alive. If they've broken out (via .first(), an explicit break,
+                        // or cancellation), terminated comes back and we exit immediately
+                        // — otherwise we'd block in `iterator.next()` forever waiting on
+                        // the transport stream that the consumer no longer cares about.
+                        let result = continuation.yield(response)
+                        if case .terminated = result { break }
                     }
 
                     retransmitter.cancel()
@@ -151,6 +162,58 @@ public actor SSDPDiscovery {
                 }
             }
             Task { await children.set(supervisor: supervisor) }
+        }
+    }
+
+    // MARK: - Convenience search forms
+
+    /// Search and return the first matching response, or `nil` if `timeout` elapses with
+    /// no response.
+    ///
+    /// Wraps a search inside a child Task so that when the first response arrives we
+    /// cancel that task — and the cancellation propagates through the search's
+    /// `Task.isCancelled` plumbing all the way down to releasing the underlying socket
+    /// subscription. Useful when you only need to confirm presence or discover one device.
+    ///
+    /// ```swift
+    /// if let device = try await discovery.firstDevice(for: .mediaServer, timeout: 10) {
+    ///     print("Found \(device.usn) at \(device.location)")
+    /// }
+    /// ```
+    public nonisolated func firstDevice(
+        for target: SSDPSearchTarget,
+        maxWait: Int = 1,
+        timeout: TimeInterval? = nil
+    ) async throws -> SSDPMSearchResponse? {
+        let request = SSDPMSearchRequest(searchTarget: target, maxWait: maxWait)
+        return try await firstDevice(for: request, timeout: timeout)
+    }
+
+    /// Search with an explicit ``SSDPMSearchRequest`` and return the first matching
+    /// response, or `nil` if `timeout` elapses with no response.
+    public nonisolated func firstDevice(
+        for request: SSDPMSearchRequest,
+        timeout: TimeInterval? = nil
+    ) async throws -> SSDPMSearchResponse? {
+        // We deliberately route iteration through a TaskGroup so we have something
+        // *cancellable* when we're ready to stop. Returning out of a `for try await` does
+        // NOT fire AsyncThrowingStream.onTermination (storage stays alive while the
+        // supervisor holds the continuation), but cancelling the inner Task does — that
+        // cancellation flows through the supervisor's `Task.isCancelled` checkpoint and
+        // tears down the socket promptly.
+        try await withThrowingTaskGroup(of: SSDPMSearchResponse?.self) { group in
+            let stream = self.search(request, timeout: timeout)
+            group.addTask {
+                for try await response in stream {
+                    return response
+                }
+                return nil
+            }
+            // Wait for the first task result, then cancel the group so the underlying
+            // search tears down even if we returned before the timeout elapsed.
+            let result = try await group.next() ?? nil
+            group.cancelAll()
+            return result
         }
     }
 
@@ -175,13 +238,16 @@ public actor SSDPDiscovery {
             let supervisor = Task {
                 do {
                     let datagrams = try await transport.multicastDatagrams()
-                    for try await datagram in datagrams {
+                    var iterator = datagrams.makeAsyncIterator()
+                    while let datagram = try await iterator.next() {
+                        if Task.isCancelled { break }
                         guard let raw = String(data: datagram.data, encoding: .utf8) else { continue }
                         guard case .notify(let n) = SSDPMessageParser.parse(raw) else {
                             // Ignore non-NOTIFY traffic on the multicast stream.
                             continue
                         }
-                        continuation.yield(n)
+                        let result = continuation.yield(n)
+                        if case .terminated = result { break }
                     }
                     continuation.finish()
                 } catch is CancellationError {
